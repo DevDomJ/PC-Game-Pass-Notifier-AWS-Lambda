@@ -8,7 +8,7 @@ using System.Diagnostics;
 
 namespace PC_Game_Pass_Notifier_AWS_Lambda
 {
-	//rename to DiscordWebhook or similar
+	// rename to DiscordWebhook or similar
 	internal class DiscordApiManager
 	{
 		private readonly string _discordWebHookUrl;
@@ -33,11 +33,11 @@ namespace PC_Game_Pass_Notifier_AWS_Lambda
 				response.EnsureSuccessStatusCode();
 			} catch (Exception exception)
 			{
-				//Check response for rate limit and retry when viable: https://discord.com/developers/docs/topics/rate-limits
+				// Check response for rate limit and retry when viable: https://discord.com/developers/docs/topics/rate-limits
 				if (response != null)
 				{
 					var retryAfter = response.Headers.RetryAfter;
-					//TODO: Move retry to sender and maybe send an "and x more" message, when retryAfter time exceeds time remaining before lambda timeout?
+					// TODO: Move retry to sender and maybe send an "and x more" message, when retryAfter time exceeds time remaining before lambda timeout?
 					if (retryAfter != null && retryAfter.Delta != null && retryAfter.Delta >= new TimeSpan(0, 0, 3))
 					{
 						Task.Delay((TimeSpan) retryAfter.Delta);
@@ -52,7 +52,7 @@ namespace PC_Game_Pass_Notifier_AWS_Lambda
 		public void SendAddedGamesMessage(List<GamePassGame> addedGames)
 		{
 			StringBuilder stringBuilder = new();
-			if(addedGames.Count == 1)
+			if (addedGames.Count == 1)
 			{
 				stringBuilder.Append("Ein neues Spiel wurde");
 			} else
@@ -67,7 +67,7 @@ namespace PC_Game_Pass_Notifier_AWS_Lambda
 		public void SendRemovedGamesMessage(List<GamePassGame> removedGames)
 		{
 			StringBuilder stringBuilder = new();
-			if(removedGames.Count == 1)
+			if (removedGames.Count == 1)
 			{
 				stringBuilder.Append("Es wurde ein Spiel");
 			} else
@@ -101,10 +101,10 @@ namespace PC_Game_Pass_Notifier_AWS_Lambda
 		private void AppendGameUpdateMessageToStringBuilder(int counter, string gameUpdateMessage, StringBuilder stringBuilder)
 		{
 			//"```" triggers code blocks in discord
-			//TODO: Find a way to convert into rich embed messages --> needs something like shop URL however
+			// TODO: Find a way to convert into rich embed messages --> needs something like shop URL however
 			// Adds characters which are not considered for my size comparison to DiscordContentCharacterLimit. --> Bug. Will be fixed with embed rework however.
 			stringBuilder
-				.Append("```")		
+				.Append("```")
 				.Append(counter)
 				.Append(". ")
 				.Append(gameUpdateMessage)
