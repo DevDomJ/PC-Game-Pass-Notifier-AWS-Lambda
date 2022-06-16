@@ -81,10 +81,10 @@ namespace PC_Game_Pass_Notifier_AWS_Lambda
 		private void SendGamesListForStringBuilder(List<GamePassGame> gamesList, StringBuilder stringBuilder)
 		{
 			int counter = 1;
-			foreach (var game in gamesList)
+			foreach (GamePassGame game in gamesList)
 			{
 				string gameUpdateMessage = game.AsUpdateDescription();
-				if (stringBuilder.Length + gameUpdateMessage.Length > DiscordContentCharacterLimit)
+				if (stringBuilder.Length + gameUpdateMessage.Length + 20 > DiscordContentCharacterLimit) // Add 20 as workaround. Will be fixed properly with embed rework.
 				{
 					SendMessage(stringBuilder.ToString());
 					stringBuilder.Clear();
