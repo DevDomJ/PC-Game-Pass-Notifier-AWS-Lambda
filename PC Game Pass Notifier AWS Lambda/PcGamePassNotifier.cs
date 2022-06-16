@@ -31,7 +31,6 @@ public class PcGamePassNotifier
 	{
 		s_lambdaContext = context;
 		await new PcGamePassNotifier(inputJsonDictionary).InitializeAndUpdateGamePassGames();
-
 	}
 
 	public static void LogInformation(string logString)
@@ -54,7 +53,6 @@ public class PcGamePassNotifier
 			return;
 		s_lambdaContext.Logger.LogWarning(logString);
 	}
-
 
 	/// <summary>
 	/// Create a new instance of the PcGamePassNotifier from the a json dictionary input.
@@ -130,6 +128,14 @@ public class PcGamePassNotifier
 		List<string> addedGameIds = newIds.Except(gamePassGameIds).ToList();
 		List<string> removedGameIds = gamePassGameIds.Except(newIds).ToList();
 		LogInformation($"Found {addedGameIds.Count} new {(addedGameIds.Count == 1 ? "game" : "games")} and {removedGameIds.Count} removed {(removedGameIds.Count == 1 ? "game" : "games")}.");
+		if (addedGameIds.Count > 0)
+		{
+			LogInformation("New games: " + JsonConvert.SerializeObject(addedGameIds));
+		}
+		if (removedGameIds.Count > 0)
+		{
+			LogInformation("Removed games: " + JsonConvert.SerializeObject(removedGameIds));
+		}
 		NotifyForNewAndRemovedGameIds(addedGameIds, removedGameIds);
 		return addedGameIds.Count + removedGameIds.Count > 0;
 	}
@@ -148,6 +154,7 @@ public class PcGamePassNotifier
 
 		if (removedGameIds.Count > 0)
 		{
+			LogInformation("Removed games: " + JsonConvert.SerializeObject(newGameIds));
 			List<GamePassGame> removedGamePassGames = new();
 			foreach (string gameId in removedGameIds)
 			{

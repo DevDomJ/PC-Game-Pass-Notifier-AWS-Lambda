@@ -31,7 +31,6 @@ namespace PC_Game_Pass_Notifier_AWS_Lambda
 				var httpContent = new FormUrlEncodedContent(dictionary);
 				response = PcGamePassNotifier.HttpClient.PostAsync(_discordWebHookUrl, httpContent).Result;
 				response.EnsureSuccessStatusCode();
-
 			} catch (Exception exception)
 			{
 				//Check response for rate limit and retry when viable: https://discord.com/developers/docs/topics/rate-limits
@@ -103,6 +102,7 @@ namespace PC_Game_Pass_Notifier_AWS_Lambda
 		{
 			//"```" triggers code blocks in discord
 			//TODO: Find a way to convert into rich embed messages --> needs something like shop URL however
+			// Adds characters which are not considered for my size comparison to DiscordContentCharacterLimit. --> Bug. Will be fixed with embed rework however.
 			stringBuilder
 				.Append("```")		
 				.Append(counter)
