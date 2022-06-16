@@ -110,6 +110,5 @@ namespace PC_Game_Pass_Notifier_AWS_Lambda
 				.Append(gameUpdateMessage)
 				.Append("```");
 		}
-
 	}
 }

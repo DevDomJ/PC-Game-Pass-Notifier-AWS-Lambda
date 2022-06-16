@@ -118,8 +118,6 @@ public class PcGamePassNotifier
 		HttpClient.Dispose();
 	}
 
-
-
 	public bool UpdateGamePassGames()
 	{
 		var gameIds = _pcGamePassApiManager.GetCurrentPcGamePassGameList();

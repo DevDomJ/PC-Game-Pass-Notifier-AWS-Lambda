@@ -69,7 +69,6 @@ namespace PC_Game_Pass_Notifier_AWS_Lambda
 			return gameIds;
 		}
 
-
 		public List<GamePassGame> GetDetailsForGameIdList(List<string> gameIds)
 		{
 			StringBuilder stringBuilder = new();
