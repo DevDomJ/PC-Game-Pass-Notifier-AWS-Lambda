@@ -92,7 +92,7 @@ namespace PC_Game_Pass_Notifier_AWS_Lambda
 
 			}
 			IList<JToken> products = productsToken.Children().ToList();
-			// TODO: Parse ProductArtUrl from "TitledHeroArt" as well.
+			// TODO: Parse ProductArtUrl from "TitledHeroArt", "SuperHeroArt", "BoxArt", "Poster" as well.
 			foreach (JToken product in products)
 			{
 				JToken? localizedPropertiesToken = product["LocalizedProperties"];
