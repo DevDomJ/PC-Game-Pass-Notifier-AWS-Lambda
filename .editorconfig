@@ -39,7 +39,8 @@ dotnet_style_prefer_compound_assignment = true:suggestion
 dotnet_style_prefer_simplified_interpolation = true:suggestion
 dotnet_style_namespace_match_folder = true:suggestion
 tab_width = 4
-indent_size = 4
+indent_size = tab
+indent_style = tab
 [*.cs]
 #### Benennungsstile ####
 
