@@ -1,10 +1,6 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Text;
-using System.Threading.Tasks;
-using System.Net.Http;
-using System.Diagnostics;
+using Newtonsoft.Json;
 
 namespace PC_Game_Pass_Notifier_AWS_Lambda
 {
@@ -12,22 +8,27 @@ namespace PC_Game_Pass_Notifier_AWS_Lambda
 	internal class DiscordApiManager
 	{
 		private readonly string _discordWebHookUrl;
-		private const int DiscordContentCharacterLimit = 2000;
 
 		public DiscordApiManager(string discordWebHookUrl)
 		{
 			_discordWebHookUrl = discordWebHookUrl;
 		}
 
-		public void SendMessage(string content)
+		public void SendMessage(List<DiscordEmbed> embeds, string? content = null)
 		{
 			HttpResponseMessage? response = null;
+			string embedJsonString = JsonConvert.SerializeObject(embeds);
 			try
 			{
 				var dictionary = new Dictionary<string, string>
-			{
-				{ "content", content }
-			};
+				{
+					{"embeds", embedJsonString}
+				};
+				if (content != null)
+				{
+					dictionary.Add("content", content);
+				}
+
 				var httpContent = new FormUrlEncodedContent(dictionary);
 				response = PcGamePassNotifier.HttpClient.PostAsync(_discordWebHookUrl, httpContent).Result;
 				response.EnsureSuccessStatusCode();
@@ -41,11 +42,11 @@ namespace PC_Game_Pass_Notifier_AWS_Lambda
 					if (retryAfter != null && retryAfter.Delta != null && retryAfter.Delta >= new TimeSpan(0, 0, 3))
 					{
 						Task.Delay((TimeSpan) retryAfter.Delta);
-						SendMessage(content);
+						SendMessage(embeds, content);
 						return;
 					}
 				}
-				PcGamePassNotifier.LogError($"An exception occured while trying to send Discord message: {content} \nexception: {exception.Message}");
+				PcGamePassNotifier.LogError($"An exception occured while trying to send Discord message: {content} \nembeds: {embedJsonString}\nexception: {exception.Message}");
 			}
 		}
 
@@ -62,7 +63,7 @@ namespace PC_Game_Pass_Notifier_AWS_Lambda
 				.Append(" neue Spiele wurden");
 			}
 			stringBuilder.AppendLine(" soeben dem PC Game Pass hinzugefügt:");
-			SendGamesListForStringBuilder(addedGames, stringBuilder);
+			SendGamesListWithIntro(addedGames, stringBuilder.ToString());
 		}
 		public void SendRemovedGamesMessage(List<GamePassGame> removedGames)
 		{
@@ -75,40 +76,31 @@ namespace PC_Game_Pass_Notifier_AWS_Lambda
 				stringBuilder.Append($"Es wurden {removedGames.Count} Spiele");
 			}
 			stringBuilder.AppendLine($" aus dem Game Pass entfernt:");
-			SendGamesListForStringBuilder(removedGames, stringBuilder);
+			SendGamesListWithIntro(removedGames, stringBuilder.ToString());
 		}
 
-		private void SendGamesListForStringBuilder(List<GamePassGame> gamesList, StringBuilder stringBuilder)
+		private void SendGamesListWithIntro(List<GamePassGame> gamesList, string intro)
 		{
-			int counter = 1;
+			int index = 1;
+			List<DiscordEmbed> embeds = new();
 			foreach (GamePassGame game in gamesList)
 			{
-				string gameUpdateMessage = game.AsUpdateDescription();
-				if (stringBuilder.Length + gameUpdateMessage.Length + 20 > DiscordContentCharacterLimit) // Add 20 as workaround. Will be fixed properly with embed rework.
+				embeds.Add(game.ToDiscordEmbedWithIndex(index));
+				index++;
+			}
+			List<List<DiscordEmbed>> embedChunks = DiscordEmbed.SplitEmbedsIntoSendableChunks(embeds);
+			bool introAdded = false;
+			foreach (List<DiscordEmbed> embedChunk in embedChunks)
+			{
+				if (introAdded)
 				{
-					SendMessage(stringBuilder.ToString());
-					stringBuilder.Clear();
-					AppendGameUpdateMessageToStringBuilder(counter, gameUpdateMessage, stringBuilder);
+					SendMessage(embedChunk);
 				} else
 				{
-					AppendGameUpdateMessageToStringBuilder(counter, gameUpdateMessage, stringBuilder);
+					introAdded = true;
+					SendMessage(embedChunk, intro);
 				}
-				counter++;
 			}
-			SendMessage(stringBuilder.ToString());
-		}
-
-		private void AppendGameUpdateMessageToStringBuilder(int counter, string gameUpdateMessage, StringBuilder stringBuilder)
-		{
-			//"```" triggers code blocks in discord
-			// TODO: Find a way to convert into rich embed messages --> needs something like shop URL however
-			// Adds characters which are not considered for my size comparison to DiscordContentCharacterLimit. --> Bug. Will be fixed with embed rework however.
-			stringBuilder
-				.Append("```")
-				.Append(counter)
-				.Append(". ")
-				.Append(gameUpdateMessage)
-				.Append("```");
 		}
 	}
 }

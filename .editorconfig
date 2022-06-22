@@ -41,6 +41,13 @@ dotnet_style_namespace_match_folder = true:suggestion
 tab_width = 4
 indent_size = tab
 indent_style = tab
+
+# IDE0049: Namen vereinfachen
+dotnet_style_predefined_type_for_locals_parameters_members = false
+
+# IDE0049: Frameworktyp verwenden
+dotnet_style_predefined_type_for_member_access = false
+
 [*.cs]
 #### Benennungsstile ####
 

@@ -1,9 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Text;
-using System.Threading.Tasks;
-using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
 namespace PC_Game_Pass_Notifier_AWS_Lambda
@@ -17,6 +13,7 @@ namespace PC_Game_Pass_Notifier_AWS_Lambda
 		public string ShortDescription { get; set; }
 		public string ProductId { get; set; }
 		public string ProductArtUrl { get; set; }
+		public ImagePurpose ProductArtImagePurpose { get; set; }
 
 		public GamePassGame()
 		{
@@ -27,6 +24,7 @@ namespace PC_Game_Pass_Notifier_AWS_Lambda
 			ShortDescription = "";
 			ProductId = "";
 			ProductArtUrl = "";
+			ProductArtImagePurpose = ImagePurpose.Other;
 		}
 
 		public enum ImagePurpose
@@ -40,7 +38,6 @@ namespace PC_Game_Pass_Notifier_AWS_Lambda
 
 		public void SetProductArtUrlFromImagesToken(JToken imagesToken)
 		{
-			var currentPurpose = ImagePurpose.Other;
 			foreach (JToken imageToken in imagesToken.Children())
 			{
 				var imagePurposeToken = imageToken["ImagePurpose"];
@@ -48,10 +45,10 @@ namespace PC_Game_Pass_Notifier_AWS_Lambda
 				if (imagePurposeTokenValue != null)
 				{
 					ImagePurpose purpose = GetImagePurposeForString(imagePurposeTokenValue);
-					if (ProductArtUrl.Length == 0 || purpose < currentPurpose)
+					if (ProductArtUrl.Length == 0 || purpose < ProductArtImagePurpose)
 					{
 						ProductArtUrl = "https://" + imagePurposeTokenValue;
-						currentPurpose = purpose;
+						ProductArtImagePurpose = purpose;
 					}
 				}
 			}
@@ -85,21 +82,9 @@ namespace PC_Game_Pass_Notifier_AWS_Lambda
 				.ToString();
 		}
 
-		public string AsUpdateEmbed()
+		public DiscordEmbed ToDiscordEmbedWithIndex(int index)
 		{
-			Dictionary<string, string> imageObject = new();
-			imageObject.Add("url", ProductArtUrl);
-
-			Dictionary<string, string> embedObject = new();
-			embedObject.Add("url", $"https://www.xbox.com/de-de/games/store/gamepass/{ProductId}");
-			embedObject.Add("title", ProductTitle);
-			embedObject.Add("description", ShortDescription);
-			embedObject.Add("image", JsonConvert.SerializeObject(imageObject));
-
-			// Discord embed limit:
-			// Additionally, the combined sum of characters in all title, description, field.name, field.value, footer.text, and author.name fields across all embeds attached
-			// to a message must not exceed 6000 characters. Violating any of these constraints will result in a Bad Request response.
-			return JsonConvert.SerializeObject(embedObject);
+			return new DiscordEmbed($"https://www.xbox.com/de-de/games/store/gamepass/{ProductId}", $"{index}. {ProductTitle}", ShortDescription, ProductArtUrl);
 		}
 	}
 }

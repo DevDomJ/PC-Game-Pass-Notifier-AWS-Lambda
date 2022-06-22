@@ -1,8 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using Amazon.Lambda.Core;
 using Amazon.S3;
 using Amazon.S3.Model;
@@ -23,7 +19,7 @@ public class PcGamePassNotifier
 	private readonly GamePassApiManager _pcGamePassApiManager;
 	private readonly DiscordApiManager _discordApiManager;
 	private readonly AmazonS3Client _s3Client;
-	private string _bucketName;
+	private readonly string _bucketName;
 
 	public static HttpClient HttpClient => s_httpClient;
 
@@ -94,15 +90,6 @@ public class PcGamePassNotifier
 		_gamePassGames = new Dictionary<string, GamePassGame>();
 		_s3Client = new AmazonS3Client(Amazon.RegionEndpoint.EUCentral1);
 		_bucketName = GetKeyFromDictionary(inputJsonDictionary, "bucketName");
-	}
-
-	private string GetKeyFromDictionary(Dictionary<string, string> dictionary, string key)
-	{
-		if (!dictionary.TryGetValue(key, out var value))
-		{
-			throw new KeyNotFoundException($"Key '{key}' not found in input json: " + JsonConvert.SerializeObject(dictionary));
-		};
-		return value;
 	}
 
 	public async Task InitializeAndUpdateGamePassGames()
@@ -197,5 +184,14 @@ public class PcGamePassNotifier
 		{
 			_gamePassGames = deserializedGamePassGames;
 		}
+	}
+
+	private string GetKeyFromDictionary(Dictionary<string, string> dictionary, string key)
+	{
+		if (!dictionary.TryGetValue(key, out var value))
+		{
+			throw new KeyNotFoundException($"Key '{key}' not found in input json: " + JsonConvert.SerializeObject(dictionary));
+		};
+		return value;
 	}
 }

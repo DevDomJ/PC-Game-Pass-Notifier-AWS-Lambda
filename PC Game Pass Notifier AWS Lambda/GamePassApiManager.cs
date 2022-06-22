@@ -1,13 +1,7 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Text;
-using System.Threading.Tasks;
-using System.Net.Http;
-using System.IO;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
-using System.Diagnostics;
 
 namespace PC_Game_Pass_Notifier_AWS_Lambda
 {
@@ -79,20 +73,23 @@ namespace PC_Game_Pass_Notifier_AWS_Lambda
 					.Append(',');
 			}
 			stringBuilder.Remove(stringBuilder.Length - 1, 1);
-
-			List<GamePassGame> gamePassGames = new();
 			string pcGamePassDetailsUrl = String.Format(_pcGamePassDetailsUrlPattern, stringBuilder.ToString());
 			string webResponseContent = PcGamePassNotifier.HttpClient.GetStringAsync(pcGamePassDetailsUrl).Result;
-			JObject pcGamePassDetails = JObject.Parse(webResponseContent);
+			return CreateGamePassGamesFromJsonString(webResponseContent);
+		}
+
+		public List<GamePassGame> CreateGamePassGamesFromJsonString(string jsonString)
+		{
+			List<GamePassGame> gamePassGames = new();
+			JObject pcGamePassDetails = JObject.Parse(jsonString);
 			JToken? productsToken = pcGamePassDetails["Products"];
 			if (productsToken == null)
 			{
-				PcGamePassNotifier.LogWarning($"Response of gamePassDetails for url: {pcGamePassDetailsUrl} does not include 'Products' item. Response: [{webResponseContent}]");
+				PcGamePassNotifier.LogWarning($"gamePassDetails JSON string does not include 'Products' item. JSON string: [{jsonString}]");
 				return gamePassGames;
 
 			}
 			IList<JToken> products = productsToken.Children().ToList();
-			// TODO: Parse ProductArtUrl from "TitledHeroArt", "SuperHeroArt", "BoxArt", "Poster" as well.
 			foreach (JToken product in products)
 			{
 				JToken? localizedPropertiesToken = product["LocalizedProperties"];
@@ -108,6 +105,11 @@ namespace PC_Game_Pass_Notifier_AWS_Lambda
 				{
 					PcGamePassNotifier.LogWarning("Failed to convert localizedProperties to GamePassGame. LocalizedProperties: " + firstLocalizedPropertiesToken.ToString());
 					continue;
+				}
+				JToken? imagesToken = localizedPropertiesToken["Images"];
+				if (imagesToken != null)
+				{
+					gamePassGame.SetProductArtUrlFromImagesToken(imagesToken);
 				}
 				var productId = productIdToken.Value<string>();
 				if (productId == null)
