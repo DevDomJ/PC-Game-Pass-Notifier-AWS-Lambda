@@ -1,3 +1,5 @@
+using System.Text;
+
 namespace PC_Game_Pass_Notifier_Tests
 {
 	public static class TestCaseUtilities
@@ -36,11 +38,13 @@ Nam liber tempor cum soluta nobis eleifend option congue nihil imperdiet doming 
 
 Duis au";
 
+		public static string ExampleSingleEmbedJsonString = "{\"url\":\"https://testUrl.com\",\"title\":\"TestTitle\",\"image\":{\"url\":\"https://testImageUrl.com\"},\"description\":\"TestDescription\"}";
+
 		public static string LoremIpsum(int characterNumber)
 		{
-			if (characterNumber = s_loremIpsum.Length)
+			if (characterNumber == s_loremIpsum.Length)
 				return s_loremIpsum;
-			if (characterNumber < s_loremIpsum)
+			if (characterNumber < s_loremIpsum.Length)
 			{
 				return s_loremIpsum.Substring(0, characterNumber);
 			}

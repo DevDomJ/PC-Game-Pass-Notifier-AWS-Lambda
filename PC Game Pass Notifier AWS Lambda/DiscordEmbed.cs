@@ -8,9 +8,10 @@ namespace PC_Game_Pass_Notifier_AWS_Lambda
 
 	public class DiscordEmbed : ISerializable
 	{
-		private const int DiscordTitleCharacterLimit = 256;
-		private const int DiscordDescriptionCharacterLimit = 4096;
-		private const int DiscordEmbedMessageCharacterLimit = 6000;
+		public const int DiscordTitleCharacterLimit = 256;
+		public const int DiscordDescriptionCharacterLimit = 4096;
+		public const int DiscordEmbedMessageCharacterLimit = 6000;
+		public const int DiscordEmbedMessageNumberLimit = 10;
 
 		public string Url { get; set; }
 		public string Title
@@ -62,7 +63,7 @@ namespace PC_Game_Pass_Notifier_AWS_Lambda
 			foreach (DiscordEmbed embed in embeds)
 			{
 				int embedSize = embed.CalculateSizeForEmbedMessage();
-				if (currentEmbedListSize + embedSize > DiscordEmbedMessageCharacterLimit)
+				if (currentEmbedListSize + embedSize > DiscordEmbedMessageCharacterLimit || currentEmbedsList.Count >= DiscordEmbedMessageNumberLimit)
 				{
 					embedsChunkList.Add(currentEmbedsList);
 					currentEmbedsList = new List<DiscordEmbed>();
