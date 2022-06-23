@@ -6,6 +6,7 @@ using Newtonsoft.Json;
 namespace PC_Game_Pass_Notifier_AWS_Lambda
 {
 
+	[Serializable()]
 	public class DiscordEmbed : ISerializable
 	{
 		public const int DiscordTitleCharacterLimit = 256;
@@ -92,10 +93,10 @@ namespace PC_Game_Pass_Notifier_AWS_Lambda
 			Dictionary<string, string> imageObject = new();
 			imageObject.Add("url", ImageUrl);
 
-			info.AddValue("url", ImageUrl, typeof(string));
+			info.AddValue("url", Url, typeof(string));
 			info.AddValue("title", Title, typeof(string));
 			info.AddValue("description", Description, typeof(string));
-			info.AddValue("image", JsonConvert.SerializeObject(imageObject), typeof(string));
+			info.AddValue("image", imageObject, typeof(Dictionary<string, string>));
 		}
 	}
 }
