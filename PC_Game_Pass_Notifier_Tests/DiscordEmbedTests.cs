@@ -93,14 +93,17 @@ namespace PC_Game_Pass_Notifier_Tests
 		public void SerializeObject_SingleEmbed_EqualsJsonString()
 		{
 			DiscordEmbed embed = new("https://testUrl.com", "TestTitle", "TestDescription", "https://testImageUrl.com");
-			// Fails, because JsonConvert does not call GetObjectData of ISerializable, despite claiming that in documentation.
 			Assert.Equal(TestCaseUtilities.ExampleSingleEmbedJsonString, JsonConvert.SerializeObject(embed));
 		}
 
 		[Fact]
-		public void SerializeObject_SendableChunksList_EqualsJsonString()
+		public void SerializeObject_ListOfEmbeds_EqualsJsonString()
 		{
-			// TODO
+			List<DiscordEmbed> embeds = new();
+			embeds.Add(new DiscordEmbed("https://testUrl1.com", "FirstEmbed", "First is best", "https://testImageUrl1.com"));
+			embeds.Add(new DiscordEmbed("https://testUrl2.com", "SecondEmbed", "Second is best", "https://testImageUrl2.com"));
+			embeds.Add(new DiscordEmbed("https://testUrl3.com", "ThirdEmbed", "Third is best", "https://testImageUrl3.com"));
+			Assert.Equal(TestCaseUtilities.ExampleListOfEmbedsJsonString, JsonConvert.SerializeObject(embeds));
 		}
 	}
 }

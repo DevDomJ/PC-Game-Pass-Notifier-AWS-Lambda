@@ -39,6 +39,7 @@ Nam liber tempor cum soluta nobis eleifend option congue nihil imperdiet doming 
 Duis au";
 
 		public static string ExampleSingleEmbedJsonString = "{\"url\":\"https://testUrl.com\",\"title\":\"TestTitle\",\"description\":\"TestDescription\",\"image\":{\"url\":\"https://testImageUrl.com\"}}";
+		public static string ExampleListOfEmbedsJsonString = "[{\"url\":\"https://testUrl1.com\",\"title\":\"FirstEmbed\",\"description\":\"First is best\",\"image\":{\"url\":\"https://testImageUrl1.com\"}},{\"url\":\"https://testUrl2.com\",\"title\":\"SecondEmbed\",\"description\":\"Second is best\",\"image\":{\"url\":\"https://testImageUrl2.com\"}},{\"url\":\"https://testUrl3.com\",\"title\":\"ThirdEmbed\",\"description\":\"Third is best\",\"image\":{\"url\":\"https://testImageUrl3.com\"}}]";
 
 		public static string LoremIpsum(int characterNumber)
 		{
