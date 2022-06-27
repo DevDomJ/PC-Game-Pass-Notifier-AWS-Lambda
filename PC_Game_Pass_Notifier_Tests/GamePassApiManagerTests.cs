@@ -5,7 +5,7 @@
 		[Fact]
 		public void CreateGamePassGamesFromJsonString_ValidJsonString_ReturnsFullGameList()
 		{
-			
+			Assert.True(false);
 		}
 
 		[Fact]
