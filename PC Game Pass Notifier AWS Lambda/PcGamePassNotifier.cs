@@ -81,15 +81,15 @@ public class PcGamePassNotifier
 	{
 		LogInformation("Received input JSON: " + JsonConvert.SerializeObject(inputJsonDictionary));
 
-		var pcGamePassAllGamesCollectionUrl = GetKeyFromDictionary(inputJsonDictionary, "allGamesUrl");
-		var pcGamePassConsoleGamesCollectionUrl = GetKeyFromDictionary(inputJsonDictionary, "consoleGamesUrl");
-		var pcGamePassDetailsUrlPattern = GetKeyFromDictionary(inputJsonDictionary, "detailUrlPattern");
+		var pcGamePassAllGamesCollectionUrl = inputJsonDictionary.GetValueForKey("allGamesUrl");
+		var pcGamePassConsoleGamesCollectionUrl = inputJsonDictionary.GetValueForKey("consoleGamesUrl");
+		var pcGamePassDetailsUrlPattern = inputJsonDictionary.GetValueForKey("detailUrlPattern");
 
 		_pcGamePassApiManager = new GamePassApiManager(pcGamePassAllGamesCollectionUrl, pcGamePassConsoleGamesCollectionUrl, pcGamePassDetailsUrlPattern);
-		_discordApiManager = new DiscordApiManager(GetKeyFromDictionary(inputJsonDictionary, "discordWebhookUrl"));
+		_discordApiManager = new DiscordApiManager(inputJsonDictionary.GetValueForKey("discordWebhookUrl"));
 		_gamePassGames = new Dictionary<string, GamePassGame>();
 		_s3Client = new AmazonS3Client(Amazon.RegionEndpoint.EUCentral1);
-		_bucketName = GetKeyFromDictionary(inputJsonDictionary, "bucketName");
+		_bucketName = inputJsonDictionary.GetValueForKey("bucketName");
 	}
 
 	public async Task InitializeAndUpdateGamePassGames()
@@ -106,14 +106,16 @@ public class PcGamePassNotifier
 	public bool UpdateGamePassGames()
 	{
 		var gameIds = _pcGamePassApiManager.GetCurrentPcGamePassGameList();
-		return CompareGameListAndNotifyAboutUpdates(gameIds);
+		bool hasUpdates = FindAddedAndRemovedGamesFromGameList(gameIds, out List<string> addedGameIds, out List<string> removedGameIds);
+		NotifyForNewAndRemovedGameIds(addedGameIds, removedGameIds);
+		return hasUpdates;
 	}
 
-	public bool CompareGameListAndNotifyAboutUpdates(List<string> newIds)
+	public bool FindAddedAndRemovedGamesFromGameList(List<string> newIds, out List<string> addedGameIds, out List<string> removedGameIds)
 	{
 		List<string> gamePassGameIds = _gamePassGames.Keys.ToList();
-		List<string> addedGameIds = newIds.Except(gamePassGameIds).ToList();
-		List<string> removedGameIds = gamePassGameIds.Except(newIds).ToList();
+		addedGameIds = newIds.Except(gamePassGameIds).ToList();
+		removedGameIds = gamePassGameIds.Except(newIds).ToList();
 		LogInformation($"Found {addedGameIds.Count} new {(addedGameIds.Count == 1 ? "game" : "games")} and {removedGameIds.Count} removed {(removedGameIds.Count == 1 ? "game" : "games")}.");
 		if (addedGameIds.Count > 0)
 		{
@@ -123,7 +125,6 @@ public class PcGamePassNotifier
 		{
 			LogInformation("Removed games: " + JsonConvert.SerializeObject(removedGameIds));
 		}
-		NotifyForNewAndRemovedGameIds(addedGameIds, removedGameIds);
 		return addedGameIds.Count + removedGameIds.Count > 0;
 	}
 
@@ -131,7 +132,8 @@ public class PcGamePassNotifier
 	{
 		if (newGameIds.Count > 0)
 		{
-			List<GamePassGame> newGamePassGames = _pcGamePassApiManager.GetDetailsForGameIdList(newGameIds);
+			string gameListDetailsJsonString = _pcGamePassApiManager.GetDetailsForGameIdList(newGameIds);
+			List<GamePassGame> newGamePassGames = _pcGamePassApiManager.CreateGamePassGamesFromJsonString(gameListDetailsJsonString);
 			_discordApiManager.SendAddedGamesMessage(newGamePassGames);
 			foreach (GamePassGame gamePassGame in newGamePassGames)
 			{
@@ -184,14 +186,5 @@ public class PcGamePassNotifier
 		{
 			_gamePassGames = deserializedGamePassGames;
 		}
-	}
-
-	private string GetKeyFromDictionary(Dictionary<string, string> dictionary, string key)
-	{
-		if (!dictionary.TryGetValue(key, out var value))
-		{
-			throw new KeyNotFoundException($"Key '{key}' not found in input json: " + JsonConvert.SerializeObject(dictionary));
-		};
-		return value;
 	}
 }

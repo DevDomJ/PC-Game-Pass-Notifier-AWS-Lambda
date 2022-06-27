@@ -63,7 +63,7 @@ namespace PC_Game_Pass_Notifier_AWS_Lambda
 			return gameIds;
 		}
 
-		public List<GamePassGame> GetDetailsForGameIdList(List<string> gameIds)
+		public string GetDetailsForGameIdList(List<string> gameIds)
 		{
 			StringBuilder stringBuilder = new();
 			foreach (string id in gameIds)
@@ -74,8 +74,7 @@ namespace PC_Game_Pass_Notifier_AWS_Lambda
 			}
 			stringBuilder.Remove(stringBuilder.Length - 1, 1);
 			string pcGamePassDetailsUrl = String.Format(_pcGamePassDetailsUrlPattern, stringBuilder.ToString());
-			string webResponseContent = PcGamePassNotifier.HttpClient.GetStringAsync(pcGamePassDetailsUrl).Result;
-			return CreateGamePassGamesFromJsonString(webResponseContent);
+			return PcGamePassNotifier.HttpClient.GetStringAsync(pcGamePassDetailsUrl).Result;
 		}
 
 		public List<GamePassGame> CreateGamePassGamesFromJsonString(string jsonString)
