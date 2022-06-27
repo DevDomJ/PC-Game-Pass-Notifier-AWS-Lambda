@@ -1,4 +1,4 @@
-[![.NET](https://github.com/DevDomJ/PC-Game-Pass-Notifier-AWS-Lambda/actions/workflows/dotnet.yml/badge.svg)](https://github.com/DevDomJ/PC-Game-Pass-Notifier-AWS-Lambda/actions/workflows/dotnet.yml)
+[![.NET Build & Test](https://github.com/DevDomJ/PC-Game-Pass-Notifier-AWS-Lambda/actions/workflows/dotnet.yml/badge.svg)](https://github.com/DevDomJ/PC-Game-Pass-Notifier-AWS-Lambda/actions/workflows/dotnet.yml)
 
 # PC Game Pass Notifier AWS Lambda
 This is a small project to automatically notify me via Discord whenever games are added to or removed from Microsoft's PC Game Pass.
