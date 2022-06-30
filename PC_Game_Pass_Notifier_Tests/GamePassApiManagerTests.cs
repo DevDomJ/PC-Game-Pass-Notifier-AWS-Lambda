@@ -2,16 +2,26 @@
 {
 	public class GamePassApiManagerTests
 	{
+		private GamePassApiManager apiManager;
+
+		// Setup - called for each test
+		public GamePassApiManagerTests()
+		{
+			apiManager = new GamePassApiManager("", "", "{0}");
+		}
+
 		[Fact]
 		public void CreateGamePassGamesFromJsonString_ValidJsonString_ReturnsFullGameList()
 		{
 			
 		}
 
-		[Fact]
-		public void CreateGamePassGamesFromJsonString_MissingProductsToken_ReturnsEmptyList()
+		[Theory]
+		[InlineData("{}")]
+		[InlineData("{test:\"test\"}")]
+		public void CreateGamePassGamesFromJsonString_MissingProductsToken_ReturnsEmptyList(string jsonString)
 		{
-
+			Assert.Empty(apiManager.CreateGamePassGamesFromJsonString(jsonString));
 		}
 
 		[Theory]

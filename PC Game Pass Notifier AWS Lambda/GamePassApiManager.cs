@@ -5,7 +5,7 @@ using Newtonsoft.Json.Linq;
 
 namespace PC_Game_Pass_Notifier_AWS_Lambda
 {
-	class GamePassApiManager
+	public class GamePassApiManager
 	{
 		private string _pcGamePassAllGamesCollectionUrl;
 		private string _pcGamePassConsoleGamesCollectionUrl;
