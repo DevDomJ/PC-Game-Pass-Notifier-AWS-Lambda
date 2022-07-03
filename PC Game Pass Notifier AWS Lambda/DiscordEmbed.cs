@@ -90,13 +90,16 @@ namespace PC_Game_Pass_Notifier_AWS_Lambda
 
 		public void GetObjectData(SerializationInfo info, StreamingContext context)
 		{
-			Dictionary<string, string> imageObject = new();
-			imageObject.Add("url", ImageUrl);
-
 			info.AddValue("url", Url, typeof(string));
 			info.AddValue("title", Title, typeof(string));
 			info.AddValue("description", Description, typeof(string));
-			info.AddValue("image", imageObject, typeof(Dictionary<string, string>));
+
+			if (ImageUrl.Length > 0)
+			{
+				Dictionary<string, string> imageObject = new();
+				imageObject.Add("url", ImageUrl);
+				info.AddValue("image", imageObject, typeof(Dictionary<string, string>));
+			}
 		}
 	}
 }
