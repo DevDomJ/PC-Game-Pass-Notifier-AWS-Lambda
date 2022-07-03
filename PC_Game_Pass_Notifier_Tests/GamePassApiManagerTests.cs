@@ -4,14 +4,21 @@
 	{
 		private GamePassApiManager apiManager;
 
+
 		private string GetJsonStringFromExampleJsonFile(string fileName)
 		{
-			return File.ReadAllText(@"..\..\..\ExampleJsonFiles\" + fileName);
+			string directory = Directory.GetCurrentDirectory();
+			for (int i = 0; i < 3; i++)
+			{
+				directory = Directory.GetParent(directory).FullName;
+			}
+			string path = Path.Combine(directory, "ExampleJsonFiles", fileName);
+			return File.ReadAllText(path);
 		}
 
 		private List<GamePassGame> GetDeserializedGamePassGamesFromJsonFile(string fileName)
 		{
-			List<GamePassGame>? gamesList = JsonConvert.DeserializeObject<List<GamePassGame>>(File.ReadAllText(@"..\..\..\ExampleJsonFiles\" + fileName));
+			List<GamePassGame>? gamesList = JsonConvert.DeserializeObject<List<GamePassGame>>(GetJsonStringFromExampleJsonFile(fileName));
 			if(gamesList is null)
 			{
 				throw new Exception("Should not happen - revise your expected serialzed json file");
