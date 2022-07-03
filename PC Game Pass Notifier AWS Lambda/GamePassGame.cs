@@ -47,8 +47,12 @@ namespace PC_Game_Pass_Notifier_AWS_Lambda
 					ImagePurpose purpose = GetImagePurposeForString(imagePurposeTokenValue);
 					if (ProductArtUrl.Length == 0 || purpose < ProductArtImagePurpose)
 					{
-						ProductArtUrl = "https://" + imagePurposeTokenValue;
-						ProductArtImagePurpose = purpose;
+						string? imageUrl = imageToken["Uri"]?.Value<string>();
+						if (imageUrl != null)
+						{
+							ProductArtImagePurpose = purpose;
+							ProductArtUrl = "https:" + imageUrl;
+						}
 					}
 				}
 			}
@@ -82,9 +86,28 @@ namespace PC_Game_Pass_Notifier_AWS_Lambda
 				.ToString();
 		}
 
+		public override bool Equals(Object? other)
+		{
+			return other is GamePassGame game
+				&& game.DeveloperName == DeveloperName
+				&& game.ProductTitle == ProductTitle
+				&& game.PublisherName == PublisherName
+				&& game.ProductDescription == ProductDescription
+				&& game.ShortDescription == ShortDescription
+				&& game.ProductId == ProductId
+				&& game.ProductArtUrl == ProductArtUrl
+				&& game.ProductArtImagePurpose == ProductArtImagePurpose;
+		}
+
+
 		public DiscordEmbed ToDiscordEmbedWithIndex(int index)
 		{
 			return new DiscordEmbed($"https://www.xbox.com/de-de/games/store/gamepass/{ProductId}", $"{index}. {ProductTitle}", ShortDescription, ProductArtUrl);
+		}
+
+		public override int GetHashCode()
+		{
+			return ProductId.GetHashCode();
 		}
 	}
 }

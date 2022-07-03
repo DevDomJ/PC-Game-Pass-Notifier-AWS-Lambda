@@ -98,6 +98,11 @@ namespace PC_Game_Pass_Notifier_AWS_Lambda
 					PcGamePassNotifier.LogWarning("Product does not contain LocalizedProperties or ProductId. Product: " + product.ToString());
 					continue;
 				}
+				if (!localizedPropertiesToken.HasValues)
+				{
+					PcGamePassNotifier.LogWarning("LocalizedProperties has no children: " + localizedPropertiesToken.ToString());
+					continue;
+				}
 				JToken firstLocalizedPropertiesToken = localizedPropertiesToken.Children().First();
 				GamePassGame? gamePassGame = firstLocalizedPropertiesToken.ToObject<GamePassGame>();
 				if (gamePassGame == null)
@@ -105,7 +110,7 @@ namespace PC_Game_Pass_Notifier_AWS_Lambda
 					PcGamePassNotifier.LogWarning("Failed to convert localizedProperties to GamePassGame. LocalizedProperties: " + firstLocalizedPropertiesToken.ToString());
 					continue;
 				}
-				JToken? imagesToken = localizedPropertiesToken["Images"];
+				JToken? imagesToken = firstLocalizedPropertiesToken["Images"];
 				if (imagesToken != null)
 				{
 					gamePassGame.SetProductArtUrlFromImagesToken(imagesToken);
