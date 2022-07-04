@@ -113,21 +113,30 @@ public class PcGamePassNotifier
 				}
 			}
 			LogInformation($"Start deletion of {logStreamsToDelete.Count} LogStreams");
-
-			// Don't actually delete yet, publish and evaluate logs first.
-
-			//List<Task> deleteTasks = new();
-			//foreach (LogStream logStream in logStreamsToDelete)
+			//// Don't actually delete yet, publish and evaluate logs first.
+			//int numberOfFailedDeletions = 0;
+			//try
 			//{
-			//	var deleteLogStreamRequest = new DeleteLogStreamRequest()
+			//	List<Task> deleteTasks = new();
+			//	foreach (LogStream logStream in logStreamsToDelete)
 			//	{
-			//		LogGroupName = s_lambdaContext.LogGroupName,
-			//		LogStreamName = logStream.LogStreamName
-			//	};
-			//	deleteTasks.Add(cloudWatchLogsClient.DeleteLogStreamAsync(deleteLogStreamRequest));
+			//		var deleteLogStreamRequest = new DeleteLogStreamRequest()
+			//		{
+			//			LogGroupName = s_lambdaContext.LogGroupName,
+			//			LogStreamName = logStream.LogStreamName
+			//		};
+			//		deleteTasks.Add(cloudWatchLogsClient.DeleteLogStreamAsync(deleteLogStreamRequest));
+			//	}
+			//	Task.WaitAll(deleteTasks.ToArray());
+			//} catch (AggregateException exception)
+			//{
+			//	foreach (var innerException in exception.InnerExceptions)
+			//	{
+			//		Console.WriteLine($"Caught exception during deletion: " + innerException.Message);
+			//		numberOfFailedDeletions++;
+			//	}
 			//}
-			//await Task.WhenAll(deleteTasks);
-			//LogInformation($"{logStreamsToDelete.Count} LogStreams deleted");
+			//LogInformation($"{logStreamsToDelete.Count - numberOfFailedDeletions} LogStreams deleted");
 		}
 	}
 
