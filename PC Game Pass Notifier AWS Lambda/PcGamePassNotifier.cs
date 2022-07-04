@@ -113,30 +113,29 @@ public class PcGamePassNotifier
 				}
 			}
 			LogInformation($"Start deletion of {logStreamsToDelete.Count} LogStreams");
-			//// Don't actually delete yet, publish and evaluate logs first.
-			//int numberOfFailedDeletions = 0;
-			//try
-			//{
-			//	List<Task> deleteTasks = new();
-			//	foreach (LogStream logStream in logStreamsToDelete)
-			//	{
-			//		var deleteLogStreamRequest = new DeleteLogStreamRequest()
-			//		{
-			//			LogGroupName = s_lambdaContext.LogGroupName,
-			//			LogStreamName = logStream.LogStreamName
-			//		};
-			//		deleteTasks.Add(cloudWatchLogsClient.DeleteLogStreamAsync(deleteLogStreamRequest));
-			//	}
-			//	Task.WaitAll(deleteTasks.ToArray());
-			//} catch (AggregateException exception)
-			//{
-			//	foreach (var innerException in exception.InnerExceptions)
-			//	{
-			//		Console.WriteLine($"Caught exception during deletion: " + innerException.Message);
-			//		numberOfFailedDeletions++;
-			//	}
-			//}
-			//LogInformation($"{logStreamsToDelete.Count - numberOfFailedDeletions} LogStreams deleted");
+			int numberOfFailedDeletions = 0;
+			try
+			{
+				List<Task> deleteTasks = new();
+				foreach (LogStream logStream in logStreamsToDelete)
+				{
+					var deleteLogStreamRequest = new DeleteLogStreamRequest()
+					{
+						LogGroupName = s_lambdaContext.LogGroupName,
+						LogStreamName = logStream.LogStreamName
+					};
+					deleteTasks.Add(cloudWatchLogsClient.DeleteLogStreamAsync(deleteLogStreamRequest));
+				}
+				Task.WaitAll(deleteTasks.ToArray());
+			} catch (AggregateException exception)
+			{
+				foreach (var innerException in exception.InnerExceptions)
+				{
+					LogError($"Caught exception during deletion: " + innerException.Message);
+					numberOfFailedDeletions++;
+				}
+			}
+			LogInformation($"{logStreamsToDelete.Count - numberOfFailedDeletions} LogStreams deleted");
 		}
 	}
 
