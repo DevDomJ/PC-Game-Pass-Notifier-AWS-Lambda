@@ -1,7 +1,9 @@
-﻿using System;
-using Amazon.Lambda.Core;
+﻿using Amazon.Lambda.Core;
 using Amazon.S3;
 using Amazon.S3.Model;
+using Amazon.CloudWatchLogs;
+using Amazon.CloudWatchLogs.Model;
+using System.Diagnostics.CodeAnalysis;
 using Newtonsoft.Json;
 
 // Assembly attribute to enable the Lambda function's JSON input to be converted into a .NET class.
@@ -23,31 +25,12 @@ public class PcGamePassNotifier
 
 	public static HttpClient HttpClient => s_httpClient;
 
+	[MemberNotNull(nameof(s_lambdaContext))]
 	public static async Task InitializeLambdaCall(Dictionary<string, string> inputJsonDictionary, ILambdaContext context)
 	{
 		s_lambdaContext = context;
 		await new PcGamePassNotifier(inputJsonDictionary).InitializeAndUpdateGamePassGames();
-	}
-
-	public static void LogInformation(string logString)
-	{
-		if (s_lambdaContext == null)
-			return;
-		s_lambdaContext.Logger.LogInformation(logString);
-	}
-
-	public static void LogError(string logString)
-	{
-		if (s_lambdaContext == null)
-			return;
-		s_lambdaContext.Logger.LogError(logString);
-	}
-
-	public static void LogWarning(string logString)
-	{
-		if (s_lambdaContext == null)
-			return;
-		s_lambdaContext.Logger.LogWarning(logString);
+		await DeleteEmptyLogStreams();
 	}
 
 	/// <summary>
@@ -90,6 +73,80 @@ public class PcGamePassNotifier
 		_gamePassGames = new Dictionary<string, GamePassGame>();
 		_s3Client = new AmazonS3Client(Amazon.RegionEndpoint.EUCentral1);
 		_bucketName = inputJsonDictionary.GetValueForKey("bucketName");
+	}
+
+	public static void LogInformation(string logString)
+	{
+		if (s_lambdaContext == null)
+			return;
+		s_lambdaContext.Logger.LogInformation(logString);
+	}
+
+	public static void LogError(string logString)
+	{
+		if (s_lambdaContext == null)
+			return;
+		s_lambdaContext.Logger.LogError(logString);
+	}
+
+	public static void LogWarning(string logString)
+	{
+		if (s_lambdaContext == null)
+			return;
+		s_lambdaContext.Logger.LogWarning(logString);
+	}
+
+	private static async Task DeleteEmptyLogStreams()
+	{
+		if (s_lambdaContext is null)
+		{
+			return;
+		}
+		var cloudWatchLogsClient = new AmazonCloudWatchLogsClient(Amazon.RegionEndpoint.EUCentral1);
+		var logGroupsRequest = new DescribeLogGroupsRequest()
+		{
+			LogGroupNamePrefix = s_lambdaContext.LogGroupName
+		};
+		DescribeLogGroupsResponse logGroupsResponse = await cloudWatchLogsClient.DescribeLogGroupsAsync(logGroupsRequest);
+		if (logGroupsResponse.LogGroups != null && logGroupsResponse.LogGroups.Count > 0)
+		{
+			LogGroup logGroup = logGroupsResponse.LogGroups.First();
+			var describeLogStreamsRequest = new DescribeLogStreamsRequest(s_lambdaContext.LogGroupName);
+			DescribeLogStreamsResponse response = await cloudWatchLogsClient.DescribeLogStreamsAsync(describeLogStreamsRequest);
+			List<LogStream> logStreamsToDelete = new();
+			foreach (LogStream logStream in response.LogStreams)
+			{
+				if ((DateTime.UtcNow - logStream.LastIngestionTime).TotalMilliseconds > (logGroup.RetentionInDays * 86400000)) // 1 day in milliseconds
+				{
+					logStreamsToDelete.Add(logStream);
+					LogInformation($"Added LogStream {logStream.LogStreamName} to deletion list");
+				}
+			}
+			LogInformation($"Start deletion of {logStreamsToDelete.Count} LogStreams");
+			int numberOfFailedDeletions = 0;
+			try
+			{
+				List<Task> deleteTasks = new();
+				foreach (LogStream logStream in logStreamsToDelete)
+				{
+					var deleteLogStreamRequest = new DeleteLogStreamRequest()
+					{
+						LogGroupName = s_lambdaContext.LogGroupName,
+						LogStreamName = logStream.LogStreamName
+					};
+					deleteTasks.Add(cloudWatchLogsClient.DeleteLogStreamAsync(deleteLogStreamRequest));
+				}
+				Task.WaitAll(deleteTasks.ToArray());
+			} catch (AggregateException exception)
+			{
+				foreach (var innerException in exception.InnerExceptions)
+				{
+					LogError($"Caught exception during deletion: " + innerException.Message);
+					numberOfFailedDeletions++;
+				}
+			}
+			LogInformation($"{logStreamsToDelete.Count - numberOfFailedDeletions} LogStreams deleted");
+		}
 	}
 
 	public async Task InitializeAndUpdateGamePassGames()
