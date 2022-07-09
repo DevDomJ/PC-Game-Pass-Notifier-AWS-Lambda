@@ -1,11 +1,13 @@
 ﻿using System;
 using System.Text;
+using System.Net.Http.Json;
+using System.Runtime.Serialization;
 using Newtonsoft.Json;
 
 namespace PC_Game_Pass_Notifier_AWS_Lambda
 {
 	// rename to DiscordWebhook or similar
-	internal class DiscordApiManager
+	public class DiscordApiManager
 	{
 		private readonly string _discordWebHookUrl;
 
@@ -14,24 +16,24 @@ namespace PC_Game_Pass_Notifier_AWS_Lambda
 			_discordWebHookUrl = discordWebHookUrl;
 		}
 
-		public void SendMessage(List<DiscordEmbed> embeds, string? content = null)
+		public bool SendMessage(List<DiscordEmbed> embeds, string? content = null)
 		{
 			HttpResponseMessage? response = null;
-			string embedJsonString = JsonConvert.SerializeObject(embeds);
+			var dictionary = new Dictionary<string, object>
+				{
+					{"embeds", embeds}
+				};
+			if (content != null)
+			{
+				dictionary.Add("content", content);
+			}
+			var httpContent = new StringContent(JsonConvert.SerializeObject(dictionary), Encoding.UTF8, "application/json");
+
 			try
 			{
-				var dictionary = new Dictionary<string, string>
-				{
-					{"embeds", embedJsonString}
-				};
-				if (content != null)
-				{
-					dictionary.Add("content", content);
-				}
-
-				var httpContent = new FormUrlEncodedContent(dictionary);
 				response = PcGamePassNotifier.HttpClient.PostAsync(_discordWebHookUrl, httpContent).Result;
 				response.EnsureSuccessStatusCode();
+				return true;
 			} catch (Exception exception)
 			{
 				// Check response for rate limit and retry when viable: https://discord.com/developers/docs/topics/rate-limits
@@ -42,11 +44,11 @@ namespace PC_Game_Pass_Notifier_AWS_Lambda
 					if (retryAfter != null && retryAfter.Delta != null && retryAfter.Delta >= new TimeSpan(0, 0, 3))
 					{
 						Task.Delay((TimeSpan) retryAfter.Delta);
-						SendMessage(embeds, content);
-						return;
+						return SendMessage(embeds, content);
 					}
 				}
-				PcGamePassNotifier.LogError($"An exception occured while trying to send Discord message: {content} \nembeds: {embedJsonString}\nexception: {exception.Message}");
+				PcGamePassNotifier.LogError($"An exception occured while trying to send Discord message: {new StreamReader(httpContent.ReadAsStream()).ReadToEnd()}\nexception: {exception.Message}");
+				return false;
 			}
 		}
 
