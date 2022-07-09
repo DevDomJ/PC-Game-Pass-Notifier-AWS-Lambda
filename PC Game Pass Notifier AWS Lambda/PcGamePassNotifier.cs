@@ -13,7 +13,7 @@ namespace PC_Game_Pass_Notifier_AWS_Lambda;
 
 public class PcGamePassNotifier
 {
-	private static ILambdaContext s_lambdaContext;
+	private static ILambdaContext? s_lambdaContext;
 	private static readonly string s_gamePassGamesFileName = "pcGamePassGames.json";
 	private static readonly HttpClient s_httpClient = new();
 
@@ -77,21 +77,31 @@ public class PcGamePassNotifier
 
 	public static void LogInformation(string logString)
 	{
+		if (s_lambdaContext == null)
+			return;
 		s_lambdaContext.Logger.LogInformation(logString);
 	}
 
 	public static void LogError(string logString)
 	{
+		if (s_lambdaContext == null)
+			return;
 		s_lambdaContext.Logger.LogError(logString);
 	}
 
 	public static void LogWarning(string logString)
 	{
+		if (s_lambdaContext == null)
+			return;
 		s_lambdaContext.Logger.LogWarning(logString);
 	}
 
 	private static async Task DeleteEmptyLogStreams()
 	{
+		if (s_lambdaContext is null)
+		{
+			return;
+		}
 		var cloudWatchLogsClient = new AmazonCloudWatchLogsClient(Amazon.RegionEndpoint.EUCentral1);
 		var logGroupsRequest = new DescribeLogGroupsRequest()
 		{
