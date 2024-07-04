@@ -34,11 +34,6 @@ namespace PC_Game_Pass_Notifier_AWS_Lambda
 			get { return _description; }
 			[MemberNotNull(nameof(_description))]
 			set {
-				if(value == null)
-				{
-					_description = "";
-					return;
-				}
 				if (value.Length <= DiscordDescriptionCharacterLimit)
 				{
 					_description = value;

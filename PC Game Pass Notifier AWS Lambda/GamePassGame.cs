@@ -102,7 +102,7 @@ namespace PC_Game_Pass_Notifier_AWS_Lambda
 
 		public DiscordEmbed ToDiscordEmbedWithIndex(int index)
 		{
-			return new DiscordEmbed($"https://www.xbox.com/de-de/games/store/gamepass/{ProductId}", $"{index}. {ProductTitle}", ShortDescription, ProductArtUrl);
+			return new DiscordEmbed($"https://www.xbox.com/de-de/games/store/gamepass/{ProductId}", $"{index}. {ProductTitle}", ShortDescription ?? "", ProductArtUrl);
 		}
 
 		public override int GetHashCode()
