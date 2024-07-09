@@ -2,7 +2,9 @@ name: .NET Build & Test
 
 on:
   push:
-    branches: [ "master" ]
+    branches: 
+      - 'master'
+      - 'test**'
   pull_request:
     branches: [ "master" ]
 
@@ -22,4 +24,6 @@ jobs:
     - name: Build
       run: dotnet build --no-restore
     - name: Test
+      env:
+        DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
       run: dotnet test --no-build --verbosity normal
