@@ -3,6 +3,7 @@ using System.Text;
 using System.Net.Http.Json;
 using System.Runtime.Serialization;
 using Newtonsoft.Json;
+using System.Net.Http;
 
 namespace PC_Game_Pass_Notifier_AWS_Lambda
 {
@@ -10,6 +11,21 @@ namespace PC_Game_Pass_Notifier_AWS_Lambda
 	public class DiscordApiManager
 	{
 		private readonly string _discordWebHookUrl;
+		private const string DISCORD_WEBHOOK_URL_ENVIRONMENT_VARIABLE_NAME = "DISCORD_WEBHOOK_URL";
+
+		public DiscordApiManager()
+		{
+			var discordWebHookUrl = Environment.GetEnvironmentVariable(DISCORD_WEBHOOK_URL_ENVIRONMENT_VARIABLE_NAME);
+			if(string.IsNullOrEmpty(discordWebHookUrl))
+			{
+				PcGamePassNotifier.LogError($"Environment variable {DISCORD_WEBHOOK_URL_ENVIRONMENT_VARIABLE_NAME} not set.");
+				throw new Exception($"Environment variable {DISCORD_WEBHOOK_URL_ENVIRONMENT_VARIABLE_NAME} not set.");
+			} else
+			{
+				_discordWebHookUrl = discordWebHookUrl;
+			}
+
+		}
 
 		public DiscordApiManager(string discordWebHookUrl)
 		{
