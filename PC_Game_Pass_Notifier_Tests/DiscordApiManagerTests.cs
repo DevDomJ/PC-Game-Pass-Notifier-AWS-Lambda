@@ -1,11 +1,28 @@
 namespace PC_Game_Pass_Notifier_Tests
 {
-	public class DiscordApiManagerTests
+	//Setup - will be executed only once, instead of for every test case
+	public class DiscordApiManagerTestFixture
 	{
-		[Fact]
-		public void SendMessage_WithContentAndEmbeds_IsSucessful()
+		public DiscordApiManager ApiManager { get; set; }
+		public DiscordApiManagerTestFixture()
 		{
-			var apiManager = new DiscordApiManager();
+			ApiManager = new DiscordApiManager();
+		}
+	}
+
+	public class DiscordApiManagerTests : IClassFixture<DiscordApiManagerTestFixture>
+	{
+		private readonly DiscordApiManagerTestFixture fixture;
+
+		public DiscordApiManagerTests(DiscordApiManagerTestFixture fixture)
+		{
+			this.fixture = fixture;
+		}
+
+		//TODO: Works for GitHub Actions, but not yet on local machine. Maybe try something like: https://stackoverflow.com/a/43951218
+		[Fact]
+		public void SendMessage_WithContentAndEmbeds_IsSuccessful()
+		{
 			List<DiscordEmbed> embeds = new();
 			embeds.Add(new DiscordEmbed(
 				"https://www.xbox.com/de-de/games/store/gamepass/9NPP17LHJ3MK",
@@ -22,7 +39,15 @@ namespace PC_Game_Pass_Notifier_Tests
 				"3. Yakuza Kiwami 2",
 				"Der Tojo-Clan und die Omi-Allianz stehen kurz vor einem Krieg. Kazuma Kiryu, der Drache von Dojima, tritt als Vermittler zwischen den Clans auf. Doch Ryuji Goda, der Drache von Kansai, will den Krieg. In dieser Welt kann es nur einen Drachen geben. In dieser Welt kann es nur einen Drachen geben.",
 				"https://store-images.s-microsoft.com/image/apps.2712.14117812508694764.cd76a3cb-9c02-4790-93a0-eae298c80bb7.2951e38f-1495-49a2-8fa7-394ab6b75d86"));
-			Assert.True(apiManager.SendMessage(embeds, "3 neue Spiele wurden soeben dem PC Game Pass hinzugefügt:"), "Failed to send message via Discord Webhook");
+			Assert.True(fixture.ApiManager.SendMessage(embeds, "3 neue Spiele wurden soeben dem PC Game Pass hinzugefügt:"), "Failed to send message via Discord Webhook");
+		}
+
+		[Fact]
+		public void SendMessage_GamePassGameWithoutShortDescription_IsSuccessful()
+		{
+			//TODO: Add test case for test_gameWithoutShortDescription.json
+			//GamePassApiManager.CreateGamePassGamesFromJsonFile();
 		}
 	}
+
 }

@@ -12,13 +12,22 @@
     <AssemblyName>PC_Game_Pass_Notifier_AWS_Lambda</AssemblyName>
   </PropertyGroup>
   <ItemGroup>
+    <None Remove="aws-lambda-tools-defaults.json" />
+  </ItemGroup>
+  <ItemGroup>
     <None Include="..\.editorconfig" Link=".editorconfig" />
+  </ItemGroup>
+  <ItemGroup Condition="'$(Configuration)' == 'Debug'">
+    <None Update=".env">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="Amazon.Lambda.Core" Version="2.1.0" />
     <PackageReference Include="Amazon.Lambda.Serialization.SystemTextJson" Version="2.3.0" />
     <PackageReference Include="AWSSDK.CloudWatchLogs" Version="3.7.2.71" />
     <PackageReference Include="AWSSDK.S3" Version="3.7.9.18" />
+    <PackageReference Include="DotNetEnv" Version="3.0.0" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.1" />
   </ItemGroup>
 </Project>
