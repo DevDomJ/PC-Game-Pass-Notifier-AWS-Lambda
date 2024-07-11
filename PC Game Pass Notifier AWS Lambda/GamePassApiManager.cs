@@ -11,6 +11,57 @@ namespace PC_Game_Pass_Notifier_AWS_Lambda
 		private string _pcGamePassConsoleGamesCollectionUrl;
 		private string _pcGamePassDetailsUrlPattern;
 
+		public static List<GamePassGame> CreateGamePassGamesFromJsonString(string jsonString)
+		{
+			List<GamePassGame> gamePassGames = new();
+			JObject pcGamePassDetails = JObject.Parse(jsonString);
+			JToken? productsToken = pcGamePassDetails["Products"];
+			if (productsToken == null)
+			{
+				PcGamePassNotifier.LogWarning($"gamePassDetails JSON string does not include 'Products' item. JSON string: [{jsonString}]");
+				return gamePassGames;
+
+			}
+			IList<JToken> products = productsToken.Children().ToList();
+			foreach (JToken product in products)
+			{
+				JToken? localizedPropertiesToken = product["LocalizedProperties"];
+				JToken? productIdToken = product["ProductId"];
+				if (localizedPropertiesToken == null || productIdToken == null)
+				{
+					PcGamePassNotifier.LogWarning("Product does not contain LocalizedProperties or ProductId. Product: " + product.ToString());
+					continue;
+				}
+				if (!localizedPropertiesToken.HasValues)
+				{
+					PcGamePassNotifier.LogWarning("LocalizedProperties has no children: " + localizedPropertiesToken.ToString());
+					continue;
+				}
+				JToken firstLocalizedPropertiesToken = localizedPropertiesToken.Children().First();
+				GamePassGame? gamePassGame = firstLocalizedPropertiesToken.ToObject<GamePassGame>();
+				if (gamePassGame == null)
+				{
+					PcGamePassNotifier.LogWarning("Failed to convert localizedProperties to GamePassGame. LocalizedProperties: " + firstLocalizedPropertiesToken.ToString());
+					continue;
+				}
+				JToken? imagesToken = firstLocalizedPropertiesToken["Images"];
+				if (imagesToken != null)
+				{
+					gamePassGame.SetProductArtUrlFromImagesToken(imagesToken);
+				}
+				var productId = productIdToken.Value<string>();
+				if (productId == null)
+				{
+					PcGamePassNotifier.LogWarning($"Failed to retrieve productId from productIdToken: {productIdToken.ToString()} of game: " + JsonConvert.SerializeObject(gamePassGame, Formatting.Indented));
+					continue;
+				}
+				gamePassGame.ProductId = productId;
+				gamePassGames.Add(gamePassGame);
+			}
+
+			return gamePassGames;
+		}
+
 		public GamePassApiManager(string pcGamePassAllGamesCollectionUrl, string pcGamePassConsoleGamesCollectionUrl, string pcGamePassDetailsUrlPattern)
 		{
 			_pcGamePassAllGamesCollectionUrl = pcGamePassAllGamesCollectionUrl;
@@ -77,55 +128,6 @@ namespace PC_Game_Pass_Notifier_AWS_Lambda
 			return PcGamePassNotifier.HttpClient.GetStringAsync(pcGamePassDetailsUrl).Result;
 		}
 
-		public List<GamePassGame> CreateGamePassGamesFromJsonString(string jsonString)
-		{
-			List<GamePassGame> gamePassGames = new();
-			JObject pcGamePassDetails = JObject.Parse(jsonString);
-			JToken? productsToken = pcGamePassDetails["Products"];
-			if (productsToken == null)
-			{
-				PcGamePassNotifier.LogWarning($"gamePassDetails JSON string does not include 'Products' item. JSON string: [{jsonString}]");
-				return gamePassGames;
-
-			}
-			IList<JToken> products = productsToken.Children().ToList();
-			foreach (JToken product in products)
-			{
-				JToken? localizedPropertiesToken = product["LocalizedProperties"];
-				JToken? productIdToken = product["ProductId"];
-				if (localizedPropertiesToken == null || productIdToken == null)
-				{
-					PcGamePassNotifier.LogWarning("Product does not contain LocalizedProperties or ProductId. Product: " + product.ToString());
-					continue;
-				}
-				if (!localizedPropertiesToken.HasValues)
-				{
-					PcGamePassNotifier.LogWarning("LocalizedProperties has no children: " + localizedPropertiesToken.ToString());
-					continue;
-				}
-				JToken firstLocalizedPropertiesToken = localizedPropertiesToken.Children().First();
-				GamePassGame? gamePassGame = firstLocalizedPropertiesToken.ToObject<GamePassGame>();
-				if (gamePassGame == null)
-				{
-					PcGamePassNotifier.LogWarning("Failed to convert localizedProperties to GamePassGame. LocalizedProperties: " + firstLocalizedPropertiesToken.ToString());
-					continue;
-				}
-				JToken? imagesToken = firstLocalizedPropertiesToken["Images"];
-				if (imagesToken != null)
-				{
-					gamePassGame.SetProductArtUrlFromImagesToken(imagesToken);
-				}
-				var productId = productIdToken.Value<string>();
-				if (productId == null)
-				{
-					PcGamePassNotifier.LogWarning($"Failed to retrieve productId from productIdToken: {productIdToken.ToString()} of game: " + JsonConvert.SerializeObject(gamePassGame, Formatting.Indented));
-					continue;
-				}
-				gamePassGame.ProductId = productId;
-				gamePassGames.Add(gamePassGame);
-			}
-
-			return gamePassGames;
-		}
+		
 	}
 }

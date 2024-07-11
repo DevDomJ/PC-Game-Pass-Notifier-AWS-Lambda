@@ -34,7 +34,7 @@ public class PcGamePassNotifier
 	}
 
 	/// <summary>
-	/// Create a new instance of the PcGamePassNotifier from the a json dictionary input.
+	/// Create a new instance of the PcGamePassNotifier from the json dictionary input.
 	/// <br></br>Expects the <paramref name="inputJsonDictionary"/> to have the following keys:
 	/// <list type="table">
 	///		<item>
@@ -69,7 +69,7 @@ public class PcGamePassNotifier
 		var pcGamePassDetailsUrlPattern = inputJsonDictionary.GetValueForKey("detailUrlPattern");
 
 		_pcGamePassApiManager = new GamePassApiManager(pcGamePassAllGamesCollectionUrl, pcGamePassConsoleGamesCollectionUrl, pcGamePassDetailsUrlPattern);
-		_discordApiManager = new DiscordApiManager(inputJsonDictionary.GetValueForKey("discordWebhookUrl"));
+		_discordApiManager = new DiscordApiManager();
 		_gamePassGames = new Dictionary<string, GamePassGame>();
 		_s3Client = new AmazonS3Client(Amazon.RegionEndpoint.EUCentral1);
 		_bucketName = inputJsonDictionary.GetValueForKey("bucketName");
@@ -190,7 +190,7 @@ public class PcGamePassNotifier
 		if (newGameIds.Count > 0)
 		{
 			string gameListDetailsJsonString = _pcGamePassApiManager.GetDetailsForGameIdList(newGameIds);
-			List<GamePassGame> newGamePassGames = _pcGamePassApiManager.CreateGamePassGamesFromJsonString(gameListDetailsJsonString);
+			List<GamePassGame> newGamePassGames = GamePassApiManager.CreateGamePassGamesFromJsonString(gameListDetailsJsonString);
 			_discordApiManager.SendAddedGamesMessage(newGamePassGames);
 			foreach (GamePassGame gamePassGame in newGamePassGames)
 			{

@@ -2,23 +2,9 @@
 {
 	public class GamePassApiManagerTests
 	{
-		private GamePassApiManager apiManager;
-
-
-		private string GetJsonStringFromExampleJsonFile(string fileName)
-		{
-			string directory = Directory.GetCurrentDirectory();
-			for (int i = 0; i < 3; i++)
-			{
-				directory = Directory.GetParent(directory).FullName;
-			}
-			string path = Path.Combine(directory, "ExampleJsonFiles", fileName);
-			return File.ReadAllText(path);
-		}
-
 		private List<GamePassGame> GetDeserializedGamePassGamesFromJsonFile(string fileName)
 		{
-			List<GamePassGame>? gamesList = JsonConvert.DeserializeObject<List<GamePassGame>>(GetJsonStringFromExampleJsonFile(fileName));
+			List<GamePassGame>? gamesList = JsonConvert.DeserializeObject<List<GamePassGame>>(TestCaseUtilities.GetJsonStringFromExampleJsonFile(fileName));
 			if(gamesList is null)
 			{
 				throw new Exception("Should not happen - revise your expected serialzed json file");
@@ -26,17 +12,11 @@
 			return gamesList;
 		}
 
-		// Setup - called for each test
-		public GamePassApiManagerTests()
-		{
-			apiManager = new GamePassApiManager("", "", "{0}");
-		}
-
 		[Fact]
 		public void CreateGamePassGamesFromJsonString_ValidJsonString_ReturnsFullGameList()
 		{
 			List<GamePassGame> expectedList = GetDeserializedGamePassGamesFromJsonFile("serialized_validDetailsFor10Games.json");
-			List<GamePassGame> actualList = apiManager.CreateGamePassGamesFromJsonString(GetJsonStringFromExampleJsonFile("test_validDetailsFor10Games.json"));
+			List<GamePassGame> actualList = TestCaseUtilities.CreateGamePassGamesFromJsonFile("test_validDetailsFor10Games.json");
 			Assert.Equal(expectedList, actualList);
 		}
 
@@ -45,14 +25,14 @@
 		[InlineData("{test:\"test\"}")]
 		public void CreateGamePassGamesFromJsonString_MissingProductsToken_ReturnsEmptyList(string jsonString)
 		{
-			Assert.Empty(apiManager.CreateGamePassGamesFromJsonString(jsonString));
+			Assert.Empty(GamePassApiManager.CreateGamePassGamesFromJsonString(jsonString));
 		}
 
 		[Fact]
 		public void CreateGamePassGamesFromJsonString_InvalidProductIdToken_SkipsIncompleteGames()
 		{
 			List<GamePassGame> expectedList = GetDeserializedGamePassGamesFromJsonFile("serialized_firstAndThirdGame.json");
-			List<GamePassGame> actualList = apiManager.CreateGamePassGamesFromJsonString(GetJsonStringFromExampleJsonFile("test_secondGameMissingProductId.json"));
+			List<GamePassGame> actualList = TestCaseUtilities.CreateGamePassGamesFromJsonFile("test_secondGameMissingProductId.json");
 			Assert.Equal(expectedList, actualList);
 		}
 
@@ -62,14 +42,14 @@
 		public void CreateGamePassGamesFromJsonString_InvalidLocalizedPropertiesToken_SkipsIncompleteGames(string fileName)
 		{
 			List<GamePassGame> expectedList = GetDeserializedGamePassGamesFromJsonFile("serialized_firstAndThirdGame.json");
-			List<GamePassGame> actualList = apiManager.CreateGamePassGamesFromJsonString(GetJsonStringFromExampleJsonFile(fileName));
+			List<GamePassGame> actualList = TestCaseUtilities.CreateGamePassGamesFromJsonFile(fileName);
 			Assert.Equal(expectedList, actualList);
 		}
 
 		[Fact]
 		public void CreateGamePassGamesFromJsonString_InvalidImagesToken_LeavesImageUrlEmpty()
 		{
-			List<GamePassGame> gamesList = apiManager.CreateGamePassGamesFromJsonString(GetJsonStringFromExampleJsonFile("test_secondGameMissingImagesToken.json"));
+			List<GamePassGame> gamesList = TestCaseUtilities.CreateGamePassGamesFromJsonFile("test_secondGameMissingImagesToken.json");
 			Assert.NotEmpty(gamesList[0].ProductArtUrl);
 			Assert.Empty(gamesList[1].ProductArtUrl);
 			Assert.NotEmpty(gamesList[2].ProductArtUrl);

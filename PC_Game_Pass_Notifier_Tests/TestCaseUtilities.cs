@@ -35,6 +35,22 @@ At vero eos et accusam et justo duo dolores et ea rebum. Stet clita kasd gubergr
 			}
 		}
 
+		public static string GetJsonStringFromExampleJsonFile(string fileName)
+		{
+			string directory = Directory.GetCurrentDirectory();
+			for (int i = 0; i < 3; i++)
+			{
+				directory = Directory.GetParent(directory).FullName;
+			}
+			string path = Path.Combine(directory, "ExampleJsonFiles", fileName);
+			return File.ReadAllText(path);
+		}
+
+		public static List<GamePassGame> CreateGamePassGamesFromJsonFile(string fileName)
+		{
+			return GamePassApiManager.CreateGamePassGamesFromJsonString(GetJsonStringFromExampleJsonFile(fileName));
+		}
+
 		[Theory]
 		[InlineData(0)]
 		[InlineData(296)] // Size of s_loremIpsumPatternString
