@@ -190,7 +190,7 @@ public class PcGamePassNotifier
 		if (newGameIds.Count > 0)
 		{
 			string gameListDetailsJsonString = _pcGamePassApiManager.GetDetailsForGameIdList(newGameIds);
-			List<GamePassGame> newGamePassGames = _pcGamePassApiManager.CreateGamePassGamesFromJsonString(gameListDetailsJsonString);
+			List<GamePassGame> newGamePassGames = GamePassApiManager.CreateGamePassGamesFromJsonString(gameListDetailsJsonString);
 			_discordApiManager.SendAddedGamesMessage(newGamePassGames);
 			foreach (GamePassGame gamePassGame in newGamePassGames)
 			{
